@@ -64,8 +64,7 @@ type RelativeValueUnit struct {
 
 // func (*RelativeValueUnit) Unmarshal(data []byte)
 
-func (r *RelativeValueUnit) FromStringSlice(in []string) error {
-
+func RVUFromRecord(in []string) (RelativeValueUnit, error) {
 	errs := []error{}
 	// process floats
 	floats := map[int]float64{}
@@ -138,8 +137,7 @@ func (r *RelativeValueUnit) FromStringSlice(in []string) error {
 		MalpracticeUsedForOppsPaymentAmount:   floats[30],
 	}
 
-	*r = rvu
-	return errors.Join(errs...)
+	return rvu, errors.Join(errs...)
 }
 
 func toSQLNullString(s string) sql.NullString {
