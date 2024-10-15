@@ -78,7 +78,7 @@ var DefaultConfig = Config{
 }
 
 func parseDate(s string) pgtype.Date {
-	date, err := time.Parse(s, "2006-01-02")
+	date, err := time.Parse("2006-01-02", s)
 	if err != nil {
 		panic(err)
 	}

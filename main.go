@@ -4,7 +4,12 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package main
 
 import (
-	"github.com/exiledavatar/cmsrvu/cmd"
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/exiledavatar/cmsrvu/cmsrvu"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
@@ -88,46 +93,44 @@ func main() {
 
 	// fmt.Println(len(xrvus))
 
-	cmd.Execute()
+	// cmd.Execute()
 
-	// fmt.Println(csvb.Comment)
+	ctx := context.Background()
+	db, err := sqlx.Connect("postgres", "postgres://postgres:password@127.0.0.1:5432/postgres?sslmode=disable")
+	if err != nil {
+		log.Println(err)
+	}
+	res, err := cmsrvu.RelativeValueUnits{}.CreatePostgresTable(ctx, db, "cmsrvu", "rvu")
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println(res)
 
-	// for k, v := range resp.Header {
-	// 	fmt.Printf("%s:\t%s\n", k, v)
-	// 	if k == "Last-Modified" {
-	// 		fmt.Println(time.Parse(time.RFC1123, v[0]))
-	// 	}
+	cfg := cmsrvu.DefaultConfig
+	for _, cfgd := range cfg.Data {
+		rvus, err := cmsrvu.GetRVUs(
+			cfgd.URL,
+			"",
+			cmsrvu.DefaultRVUFileRegex,
+			cfgd.EffectiveDate,
+		)
+		if err != nil {
+			log.Println(err)
+		}
 
-	// }
-	// ctx := context.Background()
-	// rvus, err := cmsrvu.GetRVUs(
-	// 	"https://www.cms.gov/medicare/medicare-fee-for-service-payment/physicianfeesched/downloads/rvu17b.zip",
-	// 	"",
-	// 	cmsrvu.DefaultRVUFileRegex,
-	// 	pgtype.Date{Time: time.Now(), InfinityModifier: pgtype.Finite, Valid: true},
-	// )
-	// if err != nil {
-	// 	log.Println(err)
-	// }
+		chunkSize := 1000
+		for i := 0; i < len(rvus); i += chunkSize {
+			j := i + chunkSize
+			if j > len(rvus) {
+				j = len(rvus)
+			}
+
+			values := rvus[i:j]
+			fmt.Println(values.PutPostgres(db, "cmsrvu", "rvu"))
+		}
+	}
 	// fmt.Println(len(rvus))
-	// db, err := sqlx.Connect("postgres", "postgres://postgres:password@127.0.0.1:5432/postgres?sslmode=disable")
-	// if err != nil {
-	// 	log.Println(err)
-	// }
-	// res, err := rvus.CreatePostgresTable(ctx, db, "cmsrvu", "rvu")
-	// if err != nil {
-	// 	log.Println(err)
-	// }
 	// fmt.Println(res)
-	// chunkSize := 1000
-	// for i := 0; i < len(rvus); i += chunkSize {
-	// 	j := i + chunkSize
-	// 	if j > len(rvus) {
-	// 		j = len(rvus)
-	// 	}
-
-	// 	values := rvus[i:j]
-	// 	fmt.Println(values.PutPostgres(db, "cmsrvu", "rvu"))
 	// }
 
 	// fmt.Println(rvus.PutPostgres(db, "cmsrvu", "rvu"))
