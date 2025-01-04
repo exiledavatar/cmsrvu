@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/exiledavatar/cmsrvu/cmsrvu"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func LoadAndParseConfig(filename string) (*cmsrvu.Config, error) {
