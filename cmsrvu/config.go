@@ -75,6 +75,9 @@ var DefaultConfig = Config{
 		{EffectiveDate: parseDate("2024-07-01"), URL: "https://www.cms.gov/files/zip/rvu24c-updated-09/09/2024.zip", FileRegex: ""},
 		{EffectiveDate: parseDate("2024-10-01"), URL: "https://www.cms.gov/files/zip/rvu24d.zip", FileRegex: ""},
 		{EffectiveDate: parseDate("2025-01-01"), URL: "https://www.cms.gov/files/zip/rvu25a-updated-12/06/2024.zip", FileRegex: ""},
+		{EffectiveDate: parseDate("2025-04-01"), URL: "https://www.cms.gov/files/zip/rvu25b-updated-06/05/2025.zip", FileRegex: ""},
+		{EffectiveDate: parseDate("2025-07-01"), URL: "https://www.cms.gov/files/zip/rvu25c-updated-06/05/2025.zip", FileRegex: ""},
+		{EffectiveDate: parseDate("2025-10-01"), URL: "https://www.cms.gov/files/zip/rvu25d-updated-09/11/2025.zip", FileRegex: ""},
 	},
 }
 

@@ -34,7 +34,13 @@ func GetRVUs(srcUrl, cacheFile, pattern string, effectiveDate pgtype.Date) (Rela
 	extractTime := (md["extract-time"]).(time.Time)
 	rvus := []RelativeValueUnit{}
 
-	records = records[10:]
+	// switch {
+	// case len(records) >= 11:
+	// 	records = records[10:]
+	// default:
+	// 	fmt.Println(source, ": does not appear to be long enough - rows: ", len(records))
+	// }
+
 	for _, r := range records {
 		rvu, err := RVUFromRecord(r)
 		if !rvu.StatusCode.Valid {

@@ -30,6 +30,7 @@ func GetRecords(srcUrl, cacheFile, pattern string) ([][]string, map[string]any, 
 	if err != nil {
 		return nil, nil, err
 	}
+	// fmt.Println("Downloaded data: ", srcUrl, " - ", len(zippedData))
 	meta := map[string]any{}
 	lastModified, err := time.Parse(time.RFC1123, headers["Last-Modified"][0])
 	if err != nil {
@@ -44,6 +45,7 @@ func GetRecords(srcUrl, cacheFile, pattern string) ([][]string, map[string]any, 
 	meta["source"] = srcUrl
 
 	records, err := CSVFromZip(zippedData, pattern)
+	// fmt.Println("Got records from data: ", len(records))
 	return records, meta, err
 }
 
@@ -90,11 +92,106 @@ func CSVFromZip(data []byte, pattern string) ([][]string, error) {
 		return nil, err
 	}
 	defer rc.Close()
-	// fmt.Println(zipFile.FileHeader)
-	// fmt.Println(zipFile.FileInfo())
-	records, err := csv.NewReader(rc).ReadAll()
+
+	// read to a []byte
+	bd, err := io.ReadAll(rc)
 	if err != nil {
 		return nil, err
 	}
+	// scrub all the funky characters
+	// cbd := cleanBytes(bd)
+	// cbr := bytes.NewReader(cbd)
+
+	// someone at CMS decided to change how they save their CSV's - hopefully this addresses the issue...
+	// but consider moving to the txt files as they supposedly guarantee consistent formatting
+	bd = bytes.ReplaceAll(bd, []byte("\r"), []byte("\n"))
+
+	// fmt.Printf("%#v\n", string(bd[0:1000]))
+	cbr := bytes.NewReader(bd)
+	// convert []byte to an io.Reader
+	// fmt.Println(zipFile.FileHeader)
+	// fmt.Println(zipFile.FileInfo())
+	csvReader := csv.NewReader(cbr)
+	// csvReader.FieldsPerRecord = 31
+
+	// this loop is to burn through the junk rows and the header
+	for i := range 20 {
+		// fmt.Println(i)
+		// record, err := csvReader.Read()
+		// if err != nil {
+		// 	log.Println(err)
+		// 	// return nil, err
+		// }
+		// if len(record) == 0 {
+		// 	continue
+		// }
+		// if lastHeader, err := regexp.MatchString("(?i)hcpcs$", record[0]); lastHeader {
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	break
+		// }
+
+		switch record, _ := csvReader.Read(); {
+		case len(record) == 0:
+			// fmt.Println("this is zero length")
+			//do nothing
+		case record[0] == "HCPCS":
+			// fmt.Println(i, " found the header row")
+			break
+		case i > 20:
+			return nil, fmt.Errorf("cannot find header in first 20 rows, check file")
+		default:
+			// fmt.Println("me? ", i, "\t", record[0])
+		}
+	}
+
+	records, err := csvReader.ReadAll()
+
+	if err != nil {
+		fmt.Println("Error reading records: ", err)
+
+		return nil, err
+	}
+	// fmt.Println(len(records))
+	// fmt.Printf("%#v+\n", records)
+	// fmt.Println(len(records[0]))
+
+	// fmt.Printf("%v\n", records[0][571169])
+
+	// if len(records) == 1 && len(records[0]) > 1 {
+	// 	// records = records[0]
+
+	// }
+
+	// for _, v := range records {
+	// 	// fmt.Println(i, "\n")
+	// 	for j, vj := range v {
+	// 		fmt.Println("\t", j, "\t", vj, "wtf")
+	// 		if j > 1000 {
+	// 			break
+	// 		}
+	// 	}
+	// }
+	// fmt.Printf("%+v\n", records[1][0:5])
+
 	return records, err
 }
+
+// func cleanBytes(data []byte) []byte {
+// 	// let's be extra certain
+// 	d := bytes.ToValidUTF8(data, []byte{})
+// 	d = bytes.ReplaceAll(d, []byte{'\x00'}, []byte{})
+
+// 	return bytes.Map(func(r rune) rune {
+// 		switch {
+// 		case !utf8.ValidRune(r):
+// 			return -1
+// 		case !unicode.IsPrint(r):
+// 			return -1
+// 		default:
+// 			return r
+// 		}
+// 	},
+// 		d)
+// }
